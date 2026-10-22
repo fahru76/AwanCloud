@@ -1,0 +1,20 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+data/
+recovery/
+secrets/
+.env
+*.session*
+*.key
+*.av
+.gradle/
+local.properties
+**/build/
+*.jks
+*.keystore
+
+# Compiled installers are release artifacts, not source.
+*.apk
+/install/

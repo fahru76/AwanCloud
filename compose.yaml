@@ -1,0 +1,49 @@
+services:
+  app:
+    build: .
+    user: "${AV_UID:-1000}:${AV_GID:-1000}"
+    restart: unless-stopped
+    environment: &environment
+      AV_ORIGIN: "https://${AV_HOST}"
+      AV_DATA: /data
+      AV_RECOVERY: /recovery
+      AV_KEY_FILE: /secrets/master.key
+      TG_API_ID: "${TG_API_ID:-}"
+      TG_API_HASH: "${TG_API_HASH:-}"
+    volumes:
+      - ./data:/data
+      - ${RECOVERY_PATH:-./recovery}:/recovery
+      - ./secrets:/secrets:ro
+    read_only: true
+    tmpfs: /tmp
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  setup:
+    profiles: [tools]
+    build: .
+    user: "${AV_UID:-1000}:${AV_GID:-1000}"
+    environment: *environment
+    volumes:
+      - ./data:/data
+      - ${RECOVERY_PATH:-./recovery}:/recovery
+      - ./secrets:/secrets
+    entrypoint: [python, -m, server.cli]
+    command: [init]
+    stdin_open: true
+    tty: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      AV_HOST: "${AV_HOST}"
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [app]
+volumes:
+  caddy_data:
+  caddy_config:
